@@ -1,40 +1,40 @@
 # ==============================================================================
 # SWAY CONFIG; with dms + rofi
 # ==============================================================================
-# w管桌面通知、d定切分方向、f管悬浮聚焦、a选父子层级、s换堆叠切分。5
-# q是锁屏、t做标记互换、e编布局、x跑命令、c是关闭、z和v最大最小化。7
-# 空格、Esc、回车、退格四键专用于浏览器、编辑器、终端、文件管理器；4
-# 方向键是按方向移动, Page与数字键管工作区、屏幕不单独管理，无他。10
+# Q:锁屏、W:外壳、D:父子、F:悬浮 4
+# A:安排、S:切分、E:编辑、T:标记 4
+# Z:最大、X:执行、C:关闭、V:最小 4
+# 空格、Esc、回车、退格、Tab专用于浏览器、编辑器、终端、文件、PDF。4
+# 方向键是按方向聚焦, Page与数字键管工作区、屏幕不单独管理，无他。10
 
 # === Variables ===
 set $mod Mod4
 set $moS Mod4+Shift
 set $moC Mod4+Control
-
-# DMS IPC
 set $dmsc dms ipc call
 
 # 应用程序配置
 set $browser_launcher   firefox
-set $browser_focuser    "(?i)firefox"
 set $editor_launcher    nvim-qt
-set $editor_focuser     "(?i)nvim-qt"
 set $terminal_launcher  ghostty
-set $terminal_focuser   "(?i)ghostty"
 set $filer_launcher     nemo
-set $filer_focuser      "(?i)nemo"
 set $viewer_launcher    evince
-set $viewer_focuser     "(?i)evince"
+
+set $browser_focuser    "(?i)$browser_launcher"
+set $editor_focuser     "(?i)$editor_launcher"
+set $terminal_focuser   "(?i)$terminal_launcher"
+set $filer_focuser      "(?i)$filer_launcher"
+set $viewer_focuser     "(?i)$viewer_launcher"
 
 # === Appearance & General Behavior ===
-font pango:hack 12px
+font pango:hack 20px
 show_marks yes
-focus_wrapping workspace
+focus_wrapping force
 
 ### better multiscreen experance:
 workspace_auto_back_and_forth no
 focus_follows_mouse no
-mouse_warping none
+mouse_warping container
 
 # 窗口标题与边框：锁定为传统的浮动窗口样式
 for_window [all] title_window_icon yes
@@ -43,12 +43,11 @@ floating_modifier $mod normal
 title_align center
 default_border normal
 default_floating_border normal
+# 窗口间隙
+gaps inner 2px
 
 # 初始化为 Stacking（堆叠模式）
 workspace_layout stacking
-
-# 窗口间隙
-gaps inner 1px
 
 # === Autostart Applications ===
 # 核心特权与认证代理
@@ -61,16 +60,17 @@ exec --no-startup-id fcitx5 -d --replace
 # 显示器配置 swaymsg -t get_outputs
 output eDP-1 resolution 1920x1200@60Hz
 
-# 绑定语法：workspace <ws#i> output <显示器A> <备用显示器B>
+# 绑定语法：workspace <wsName> output <显示器A> <备用显示器B>
 workspace 1 output DP-3 eDP-1
 workspace 2 output DP-3 eDP-1
 workspace 3 output eDP-1
 workspace 4 output eDP-1
 
-# 键盘与输入法环境注入（完美修正 Xkb）
+# 键盘与输入法环境注入 与 鼠标指针
 input type:keyboard {
-    xkb_layout "cell"
+  xkb_layout "cell"
 }
+seat * xcursor_theme breeze-cursors-snow 24
 
 # === Keybindings ===
 # 多媒体控制（联动高效刷新信号）
@@ -89,25 +89,25 @@ bindsym $moC+Shift+q exec --no-startup-id $dmsc lock lockAndOutputsOff; sleep 0.
 bindsym $mod+w exec --no-startup-id $dmsc bar toggle index 0
 bindsym $moS+w exec --no-startup-id $dmsc notifications clearAll
 
-# 预设下一次切分为水平方向 Direction
-bindsym $mod+d splith
-bindsym $moS+d splitv
+# focus Descendant
+bindsym $mod+d focus parent
+bindsym $moS+d focus child
 
 # 将当前聚焦的窗口在平铺与悬浮之间切换 Float
 bindsym $mod+f focus mode_toggle
 bindsym $moS+f floating toggle
 
-# focus Ancestor
-bindsym $mod+a focus parent
-bindsym $moS+a focus child
+# change container layout -- Arrange: stack/split, direction
+bindsym $mod+a layout toggle stacking splitv
+bindsym $moS+a layout toggle split
 
-# Change container layout -- Stack/split, or toggle direction
-bindsym $mod+s layout toggle stacking splitv
-bindsym $moS+s layout toggle split
+# 预设下一次切分为水平方向 Split
+bindsym $mod+s splith
+bindsym $moS+s splitv
 
 # Edit layout (by south-east corner)
-bindsym $mod+e mode "edit-normal"
-bindsym $moS+e mode "edit-refine"
+bindsym $mod+e mode "edit-refine"
+bindsym $moS+e mode "edit-normal"
 
 # mark a window with "TAG" and swap with it
 bindsym $mod+t mark --toggle TAG
@@ -129,16 +129,21 @@ bindsym $moS+c kill
 bindsym $mod+v scratchpad show
 bindsym $moS+v move scratchpad
 
+# task switcher
+bindsym Alt+Tab        focus next sibling
+bindsym Alt+Shift+Tab  exec --no-startup-id "rofi -theme gruvbox-dark -show window -show-icons"
+
 # 应用精准聚焦与条件拉起
 bindsym $mod+space     [app_id=$browser_focuser] focus
-bindsym $moS+space     exec --no-startup-id $browser_launcher
 bindsym $mod+Escape    [app_id=$editor_focuser] focus
-bindsym $moS+Escape    exec --no-startup-id $editor_launcher
 bindsym $mod+Return    [app_id=$terminal_focuser] focus
-bindsym $moS+Return    exec --no-startup-id $terminal_launcher
 bindsym $mod+BackSpace [app_id=$filer_focuser] focus
-bindsym $moS+BackSpace exec --no-startup-id $filer_launcher
 bindsym $mod+Tab       [app_id=$viewer_focuser] focus
+
+bindsym $moS+space     exec --no-startup-id $browser_launcher
+bindsym $moS+Escape    exec --no-startup-id $editor_launcher
+bindsym $moS+Return    exec --no-startup-id $terminal_launcher
+bindsym $moS+BackSpace exec --no-startup-id $filer_launcher
 bindsym $moS+Tab       exec --no-startup-id $viewer_launcher
 
 # 基础物理焦点切换+几何挪动（经典的上下左右）
@@ -153,22 +158,17 @@ bindsym $moS+Up    move up
 bindsym $moS+Right move right
 
 # 工作区管理（1-4 极简映射）
-set $ws1 "1"
-set $ws2 "2"
-set $ws3 "3"
-set $ws4 "4"
+bindsym $mod+1 workspace number 1
+bindsym $mod+2 workspace number 2
+bindsym $mod+3 workspace number 3
+bindsym $mod+4 workspace number 4
 
-bindsym $mod+1 workspace number $ws1
-bindsym $mod+2 workspace number $ws2
-bindsym $mod+3 workspace number $ws3
-bindsym $mod+4 workspace number $ws4
+bindsym $moS+1 move container to workspace number 1
+bindsym $moS+2 move container to workspace number 2
+bindsym $moS+3 move container to workspace number 3
+bindsym $moS+4 move container to workspace number 4
 
-bindsym $moS+1 move container to workspace number $ws1
-bindsym $moS+2 move container to workspace number $ws2
-bindsym $moS+3 move container to workspace number $ws3
-bindsym $moS+4 move container to workspace number $ws4
-
-# Gnome2 like workspacing
+# Gnome like workspacing
 bindsym $mod+Page_Up   workspace prev
 bindsym $mod+Page_Down workspace next
 bindsym $moS+Page_Up   move container to workspace prev
@@ -177,8 +177,6 @@ bindsym $moS+Page_Down move container to workspace next
 # === Window Rules ===
 no_focus [window_role="pop-up"]
 for_window [window_role="About"] floating enable
-
-# 全屏自由浮动
 # for_window [class=".*"] floating enable
 # for_window [app_id=".*"] floating enable
 
@@ -189,13 +187,14 @@ mode "edit-normal" {
     bindsym $mod+Up    move up    200px
     bindsym $mod+Right move right 250px
 
-    bindsym $mod+Shift+Left  resize shrink width  250px
-    bindsym $mod+Shift+Down  resize grow   height 200px
-    bindsym $mod+Shift+Up    resize shrink height 200px
-    bindsym $mod+Shift+Right resize grow   width  250px
+    bindsym $moS+Left  resize shrink width  250px
+    bindsym $moS+Down  resize grow   height 200px
+    bindsym $moS+Up    resize shrink height 200px
+    bindsym $moS+Right resize grow   width  250px
 
-    # Super_L/R 不支持松开退出的机制
     bindsym $mod+c move position center
+    bindsym $moS+c move position center
+
     bindsym Tab mode "default"
     bindsym Space mode "default"
     bindsym BackSpace mode "default"
@@ -210,13 +209,14 @@ mode "edit-refine" {
     bindsym $mod+Up    move up    40px
     bindsym $mod+Right move right 50px
 
-    bindsym $mod+Shift+Left  resize shrink width  50px
-    bindsym $mod+Shift+Down  resize grow   height 40px
-    bindsym $mod+Shift+Up    resize shrink height 40px
-    bindsym $mod+Shift+Right resize grow   width  50px
+    bindsym $moS+Left  resize shrink width  50px
+    bindsym $moS+Down  resize grow   height 40px
+    bindsym $moS+Up    resize shrink height 40px
+    bindsym $moS+Right resize grow   width  50px
 
-    # Super_L/R 不支持松开退出的机制
     bindsym $mod+c move position center
+    bindsym $moS+c move position center
+
     bindsym Tab mode "default"
     bindsym Space mode "default"
     bindsym BackSpace mode "default"
