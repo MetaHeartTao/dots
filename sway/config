@@ -4,7 +4,7 @@
 # Q:锁屏、W:外壳、D:父子、F:悬浮 4
 # A:安排、S:切分、E:编辑、T:标记 4
 # Z:最大、X:执行、C:关闭、V:最小 4
-# 空格、Esc、回车、退格、Tab专用于浏览器、编辑器、终端、文件、PDF。4
+# 空格、回车、退格、Esc专用于浏览器、终端、文件、PDF。4
 # 方向键是按方向聚焦, Page与数字键管工作区、屏幕不单独管理，无他。10
 
 # === Variables ===
@@ -15,13 +15,11 @@ set $dmsc dms ipc call
 
 # 应用程序配置
 set $browser_launcher   firefox
-set $editor_launcher    nvim-qt
 set $terminal_launcher  ghostty
 set $filer_launcher     nemo
 set $viewer_launcher    evince
 
 set $browser_focuser    "(?i)$browser_launcher"
-set $editor_focuser     "(?i)$editor_launcher"
 set $terminal_focuser   "(?i)$terminal_launcher"
 set $filer_focuser      "(?i)$filer_launcher"
 set $viewer_focuser     "(?i)$viewer_launcher"
@@ -43,6 +41,7 @@ floating_modifier $mod normal
 title_align center
 default_border normal
 default_floating_border normal
+
 # 窗口间隙
 gaps inner 2px
 
@@ -130,21 +129,19 @@ bindsym $mod+v scratchpad show
 bindsym $moS+v move scratchpad
 
 # task switcher
-bindsym Alt+Tab        focus next sibling
-bindsym Alt+Shift+Tab  exec --no-startup-id "rofi -theme gruvbox-dark -show window -show-icons"
+bindsym $mod+Tab focus next sibling
+bindsym $moS+Tab exec --no-startup-id "rofi -theme gruvbox-dark -show window -show-icons"
 
 # 应用精准聚焦与条件拉起
 bindsym $mod+space     [app_id=$browser_focuser] focus
-bindsym $mod+Escape    [app_id=$editor_focuser] focus
+bindsym $mod+Escape    [app_id=$viewer_focuser] focus
 bindsym $mod+Return    [app_id=$terminal_focuser] focus
 bindsym $mod+BackSpace [app_id=$filer_focuser] focus
-bindsym $mod+Tab       [app_id=$viewer_focuser] focus
 
 bindsym $moS+space     exec --no-startup-id $browser_launcher
-bindsym $moS+Escape    exec --no-startup-id $editor_launcher
+bindsym $moS+Escape    exec --no-startup-id $viewer_launcher
 bindsym $moS+Return    exec --no-startup-id $terminal_launcher
 bindsym $moS+BackSpace exec --no-startup-id $filer_launcher
-bindsym $moS+Tab       exec --no-startup-id $viewer_launcher
 
 # 基础物理焦点切换+几何挪动（经典的上下左右）
 bindsym $mod+Left  focus left
@@ -195,7 +192,6 @@ mode "edit-normal" {
     bindsym $mod+c move position center
     bindsym $moS+c move position center
 
-    bindsym Tab mode "default"
     bindsym Space mode "default"
     bindsym BackSpace mode "default"
     bindsym Return mode "default"
@@ -217,7 +213,6 @@ mode "edit-refine" {
     bindsym $mod+c move position center
     bindsym $moS+c move position center
 
-    bindsym Tab mode "default"
     bindsym Space mode "default"
     bindsym BackSpace mode "default"
     bindsym Return mode "default"
