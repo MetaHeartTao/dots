@@ -1,11 +1,11 @@
 # ==============================================================================
-# SWAY CONFIG; with dms + rofi
+#   SWAY CONFIG; with dms + rofi
 # ==============================================================================
-# Q:锁屏、W:外壳、D:父子、F:悬浮 4
+# Q:锁屏、W:外壳、D:深层、F:悬浮 4
 # A:安排、S:切分、E:编辑、T:标记 4
 # Z:最大、X:执行、C:关闭、V:最小 4
 # 空格、回车、退格、Esc专用于浏览器、终端、文件、PDF。4
-# 方向键是按方向聚焦, Page与数字键管工作区、屏幕不单独管理，无他。10
+# 上下左右按方向聚焦, PageUp/Dn与1234管工作区、Home/End管屏幕。12
 
 # === Variables ===
 set $mod Mod4
@@ -41,7 +41,6 @@ floating_modifier $mod normal
 title_align center
 default_border normal
 default_floating_border normal
-
 # 窗口间隙
 gaps inner 2px
 
@@ -88,7 +87,7 @@ bindsym $moC+Shift+q exec --no-startup-id $dmsc lock lockAndOutputsOff; sleep 0.
 bindsym $mod+w exec --no-startup-id $dmsc bar toggle index 0
 bindsym $moS+w exec --no-startup-id $dmsc notifications clearAll
 
-# focus Descendant
+# focus Deeper
 bindsym $mod+d focus parent
 bindsym $moS+d focus child
 
@@ -117,20 +116,20 @@ bindsym $mod+z layout toggle stacking tabbed
 bindsym $moS+z fullscreen toggle
 
 # 应用启动器 eXec
-bindsym $mod+x exec --no-startup-id "rofi -theme gruvbox-dark -show combi -combi-modi window,drun,run -show-icons"
+bindsym $mod+x exec --no-startup-id "rofi -theme fullscreen-preview -show combi -combi-modi window,drun,run -show-icons"
 bindsym $moS+x exec --no-startup-id $dmsc spotlight toggle
 
 # 关闭窗口与底层命令透传 Close
-bindsym $mod+c exec --no-startup-id "rofi -theme gruvbox-dark -dmenu -p 'Cmd> ' -font 'Hack 16' | xargs swaymsg"
+bindsym $mod+c exec --no-startup-id "rofi -theme docu -dmenu -p 'Cmd> ' -font 'Hack 16' | xargs swaymsg"
 bindsym $moS+c kill
 
-# 暂存区 Vanish
+# 暂存区 Void
 bindsym $mod+v scratchpad show
 bindsym $moS+v move scratchpad
 
 # task switcher
 bindsym $mod+Tab focus next sibling
-bindsym $moS+Tab exec --no-startup-id "rofi -theme gruvbox-dark -show window -show-icons"
+bindsym $moS+Tab exec --no-startup-id "rofi -theme fullscreen-preview -show window -show-icons"
 
 # 应用精准聚焦与条件拉起
 bindsym $mod+space     [app_id=$browser_focuser] focus
@@ -170,6 +169,12 @@ bindsym $mod+Page_Up   workspace prev
 bindsym $mod+Page_Down workspace next
 bindsym $moS+Page_Up   move container to workspace prev
 bindsym $moS+Page_Down move container to workspace next
+
+# 屏幕聚焦
+bindsym $mod+Home focus output left
+bindsym $mod+End  focus output right
+bindsym $moS+Home move container to output left
+bindsym $moS+End  move container to output right
 
 # === Window Rules ===
 no_focus [window_role="pop-up"]
