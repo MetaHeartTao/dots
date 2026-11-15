@@ -3,7 +3,7 @@
 -- 设计原则：默认键优先，少量例外有明确理由
 --   · Q/gQ、- 等兼容键只为 0.12 模拟 0.13 行为；保存、折行等少数人体工学键另行说明
 --   · 工作流键主要放在 <Leader>（空格）下，按功能分组：b c d e f g o p q r s t
---   · 只在某种文件里有用的键（LaTeX / Python / Go）只在该文件类型的缓冲区里生效
+--   · 只在某种文件里有用的键（Tex / Python / Go）只在该文件类型的缓冲区里生效
 --
 -- ╔══════════════════════════════ PLUGINS ══════════════════════════════════
 -- ║ mini.nvim / overseer.nvim（0.12 另加 multicursor.nvim；0.13+ 用内置多光标）
@@ -399,7 +399,7 @@ use("mini.files", function(m)
   map("n", "<leader>e", function()
     local f = vim.api.nvim_buf_get_name(0)
     m.open((f ~= "" and vim.uv.fs_stat(f)) and f or nil, false)
-  end, { desc = "File explorer (mini.files)" })
+  end, { desc = "explorer (files)" })
 end)
 
 -- 查找 + 接管 vim.ui.select（Overseer 的选择框也用它）
@@ -413,6 +413,9 @@ local pick = use("mini.pick", function(m)
   m.setup()
   vim.ui.select = m.ui_select
   local b = m.builtin
+  map("n", "<Leader>ss", ":1,$s//gc<Left><Left><Left>", { desc = "Replace" })
+  map("n", "<Leader>sh", ":1,$s/[\\u200b-\\u200d\\ufeff]//ge", { desc = "HidenChar clear" })
+  -- map("n", "<Leader>sh", ":1,$s/\\%u200b\\|\\%u200c\\|\\%u200d\\|\\%ufeff//ge<CR>", { desc = "Clear Hidden Chars" })
   map("n", "<leader>sf", function() b.files({ tool = pick_tool(has("rg") or has("fd")) }) end, { desc = "Files" })
   map("n", "<leader>sg", function()
     local t = pick_tool(has("rg"))
@@ -477,13 +480,13 @@ local clue_mod = use("mini.clue", function(clue)
     { mode = { "n", "x" }, keys = "<Leader>d", desc = "+Diffs" },
     { mode = { "n", "x" }, keys = "<Leader>e", desc = "+Explorer" },
     { mode = { "n", "x" }, keys = "<Leader>f", desc = "+Files" },
-    { mode = { "n", "x" }, keys = "<Leader>g", desc = "+Go" },
+    { mode = { "n", "x" }, keys = "<Leader>g", desc = "+ --- Go ---" },
     { mode = { "n", "x" }, keys = "<Leader>o", desc = "+Overseer" },
-    { mode = { "n", "x" }, keys = "<Leader>p", desc = "+Python" },
+    { mode = { "n", "x" }, keys = "<Leader>p", desc = "+ --- Python ---" },
     { mode = { "n", "x" }, keys = "<Leader>q", desc = "+Quench" },
     { mode = { "n", "x" }, keys = "<Leader>r", desc = "+Reform" },
     { mode = { "n", "x" }, keys = "<Leader>s", desc = "+Search" },
-    { mode = { "n", "x" }, keys = "<Leader>t", desc = "+LaTeX" },
+    { mode = { "n", "x" }, keys = "<Leader>t", desc = "+ --- Tex ---" },
   }
 
   clue.setup({
@@ -551,7 +554,7 @@ end
 ----------------------------------------------------------------------
 -- 5. Overseer (v2)
 ----------------------------------------------------------------------
--- 自定义组件：任务一启动就通知 (OverseerRun / OverseerShell / 重跑 / LaTeX / Python 都会触发)
+-- 自定义组件：任务一启动就通知 (OverseerRun / OverseerShell / 重跑 / Tex / Python 都会触发)
 -- 用 rawset 注册，避免 lua_ls 对 package.preload 的字段注入告警
 rawset(package.preload, "overseer.component.on_start_notify", function()
   return {
@@ -1235,7 +1238,7 @@ au("LspAttach", {
 })
 
 ----------------------------------------------------------------------
--- 10. 任务运行 + LaTeX
+-- 10. 任务运行 + Tex
 --     优先交给 Overseer：启动/完成都有通知、错误进 quickfix；没有 Overseer 时在底部终端运行
 ----------------------------------------------------------------------
 -- 只在某种文件类型的缓冲区里生效的键（<LocalLeader> = 空格）
@@ -1305,17 +1308,17 @@ end
 -- -synctex=1：PDF ↔ 源码跳转；-file-line-error：错误格式为 file:line:，可被 quickfix 解析
 local TEX = { USER.latex_engine, "-synctex=1", "-file-line-error", "-interaction=nonstopmode", "-halt-on-error" }
 ft_keys({ "tex", "plaintex" }, function(k)
-  k("n", "<LocalLeader>tt", function() latexmk(TEX, "LaTeX 编译") end, "Compile")
+  k("n", "<LocalLeader>tt", function() latexmk(TEX, "Tex 编译") end, "Compile")
   k("n", "<LocalLeader>tw", function()
-    latexmk(vim.list_extend({ "-pvc", "-view=none" }, TEX), "LaTeX 持续编译")   -- <Space>oa 停止
+    latexmk(vim.list_extend({ "-pvc", "-view=none" }, TEX), "Tex 持续编译")   -- <Space>oa 停止
   end, "Continuous compile (-pvc)")
-  k("n", "<LocalLeader>te", function() latexmk(vim.list_extend({ "-gg" }, TEX), "LaTeX 完全重建") end, "Full rebuild")
-  k("n", "<LocalLeader>tc", function() latexmk({ "-c" }, "LaTeX 清理") end, "Clean aux (keep PDF)")
+  k("n", "<LocalLeader>te", function() latexmk(vim.list_extend({ "-gg" }, TEX), "Tex 完全重建") end, "Full rebuild")
+  k("n", "<LocalLeader>tc", function() latexmk({ "-c" }, "Tex 清理") end, "Clean aux (keep PDF)")
   k("n", "<LocalLeader>tv", view_pdf, "View PDF")
 end)
 
 ----------------------------------------------------------------------
--- 11. Python（与 LaTeX 同样：优先交给 Overseer，错误进 quickfix；没有 Overseer 时在底部终端运行）
+-- 11. Python（与 Tex 同样：优先交给 Overseer，错误进 quickfix；没有 Overseer 时在底部终端运行）
 --     可选外部工具：ruff（lint/格式化）、项目环境里的 pytest / ipython；缺了只跳过对应功能
 ----------------------------------------------------------------------
 -- 续行缩进用 1 个 shiftwidth（PEP 8 风格，内置默认是 2 个）
@@ -1750,3 +1753,203 @@ if #missing > 0 then
       :format(table.concat(missing, ", "), table.concat(hints, "\n")), L.WARN)
   end)
 end
+
+----------------------------------------------------------------------
+-- 15. LIP
+----------------------------------------------------------------------
+-- LIP 单文件编辑支持，整段复制到自己的 init.lua 即可。
+-- 内置：.lip 文件识别、高亮、结构缩进、注释设置、补全、代码模板。
+-- 补全：插入模式 Ctrl-X Ctrl-O（包含当前文件的名称）。
+-- 模板：:LipTemplate flow；:LipTemplate 后按 Tab 查看可选模板。
+-- 缩进：普通模式 == 或 gg=G；保留三引号字符串正文的原缩进。
+-- 本文件只提供编辑功能；检查/运行/构建需要编译器，未在这里添加。
+-- 可独立试用：nvim -u /tmp/lip-standalone.lua /tmp/hello.lip
+-- 下面内嵌 Vimscript，以复用现有实现；运行时不读取仓库文件。
+do
+  vim.cmd([=[
+filetype plugin indent on
+syntax enable
+let s:save_cpo = &cpoptions
+set cpoptions&vim
+let s:words = split('import as flow fn return if else match for in parallel break continue with next effect perform export void true false null any bool number string list object function claim len str range map fold fail concat slice keys has put split parse_number native_data native_release')
+let s:templates = {
+      \ 'flow': ['flow Main() -> any {', '  return null', '}'],
+      \ 'fn': ['fn name(value: number) -> number {', '  value', '}'],
+      \ 'if': ['if condition {', '  result = true', '} else {', '  result = false', '}'],
+      \ 'for': ['for item in items {', '  result = item', '}'],
+      \ 'carry': ['total = for item in items with acc = 0 {', '  next acc + item', '}'],
+      \ 'claimfor': ['results = claim()', 'for item in items parallel {', '  results <+ item', '}'],
+      \ 'match': ['match value {', '  null => 0,', '  _ => 1', '}'],
+      \ 'importlip': ['import lip "lib/module.lip" as module'],
+      \ 'perform': ['result = perform effect module.operation()'],
+      \ 'performproposal': ['result = perform proposal'],
+      \ 'slice': ['items[0:null:1]'],
+      \ 'reverse': ['items[::-1]'],
+      \ 'indices': ['items[[0, -1]]'],
+      \ 'snapshot': ['seen = perform effect claim.snapshot("facts")'],
+      \ 'nativedata': ['snapshot = native_data(resource)'],
+      \ 'nativerelease': ['native_release(resource)'],
+      \ 'exportdata': ['export answer: number = 42'],
+      \ 'text': ['"""', '', '"""']}
+
+function! LipStandaloneTemplateNames(lead, line, pos) abort
+  return filter(sort(keys(s:templates)), 'stridx(v:val, a:lead) == 0')
+endfunction
+
+function! LipStandaloneTemplate(name) abort
+  if !has_key(s:templates, a:name)
+    echoerr 'Unknown LIP template: ' . a:name
+    return
+  endif
+  let prefix = matchstr(getline('.'), '^\s*')
+  let lines = map(copy(s:templates[a:name]), 'prefix . v:val')
+  if getline('.') =~# '^\s*$'
+    call setline('.', lines[0])
+    call append(line('.'), lines[1:])
+  else
+    call append(line('.'), lines)
+    normal! j
+  endif
+endfunction
+
+function! LipStandaloneComplete(findstart, base) abort
+  if a:findstart
+    let start = col('.') - 1
+    while start > 0 && getline('.')[start - 1] =~# '[A-Za-z0-9_]'
+      let start -= 1
+    endwhile
+    return start
+  endif
+  let words = copy(s:words)
+  for line in getline(1, '$')
+    call extend(words, split(substitute(line, '[^A-Za-z0-9_]', ' ', 'g')))
+  endfor
+  return filter(sort(uniq(sort(words))), 'v:val =~# "^[A-Za-z_]" && stridx(v:val, a:base) == 0')
+endfunction
+
+function! LipStandaloneIndent(lnum) abort
+  " Scan delimiters, comments and both string forms. Syntax highlighting may be off.
+  let stack = []
+  let mode = ''
+  let continued = 0
+  for n in range(1, a:lnum - 1)
+    let line = getline(n)
+    let i = 0
+    let continued = 0
+    while i < strlen(line)
+      let c = line[i]
+      if mode !=# ''
+        if c ==# '\'
+          let i += 2
+          continue
+        elseif mode ==# 'triple' && strpart(line, i, 3) ==# '"""'
+          let mode = ''
+          let i += 3
+          continue
+        elseif mode ==# 'single' && c ==# '"'
+          let mode = ''
+        endif
+      elseif c ==# '#'
+        break
+      elseif strpart(line, i, 3) ==# '"""'
+        let mode = 'triple'
+        let i += 3
+        continue
+      elseif c ==# '"'
+        let mode = 'single'
+      elseif c =~# '[([{]'
+        call add(stack, [c, indent(n)])
+      elseif c =~# '[])}]' && !empty(stack)
+        call remove(stack, -1)
+      elseif c ==# '\' && i == strlen(line) - 1
+        let continued = 1
+      endif
+      let i += 1
+    endwhile
+    if mode ==# 'single'
+      let mode = ''
+    endif
+  endfor
+  if mode ==# 'triple'
+    return -1
+  endif
+  let closing = getline(a:lnum) =~# '^\s*[])}]'
+  if !empty(stack)
+    return stack[-1][1] + (closing ? 0 : shiftwidth())
+  endif
+  return continued ? shiftwidth() : 0
+endfunction
+
+function! s:Syntax() abort
+  syntax clear
+  syntax case match
+  syntax keyword lipKeyword import as flow fn return if else match for in parallel break continue with next effect perform export void
+  syntax keyword lipConstant true false null
+  syntax keyword lipBuiltin claim len str range map fold fail concat slice keys has put split parse_number
+  syntax match lipNativeHelper /\<\%(native_data\|native_release\)\>\ze\s*(/
+  syntax match lipType /\%(:\|->\)\s*\zs\%(any\|bool\|number\|string\|list\|object\|function\|effect\|void\|null\)\>\%(?\)\?/
+  syntax match lipFunction /\<\%(fn\|flow\)\s\+\zs[A-Za-z_][A-Za-z0-9_]*/
+  syntax match lipNumber /\<\%(0\|[1-9][0-9]*\)\%(\.[0-9]\+\)\?\%([eE][+-]\?[0-9]\+\)\?\>/
+  syntax match lipOperator /<+\|->\|=>\|==\|!=\|<=\|>=\|&&\|||\|\/\/\|\*\*\|\*\/\||>\|[=+*\/%!<>?-]/
+  syntax keyword lipTodo TODO FIXME XXX NOTE contained
+  syntax match lipComment /#.*/ contains=lipTodo,@Spell
+  syntax match lipEscape /\\\%(["\\nrt]\|u{[0-9A-Fa-f]\{1,6}}\)/ contained
+  syntax region lipString start=/"/ skip=/\\./ end=/"/ end=/$/ contains=lipEscape,@Spell
+  " Last match wins: triple quotes must take precedence over ordinary strings.
+  syntax region lipMultilineString start=/"""/ skip=/\\./ end=/"""/ contains=lipEscape,@Spell keepend
+  syntax sync fromstart
+  highlight default link lipKeyword Keyword
+  highlight default link lipConstant Constant
+  highlight default link lipBuiltin Function
+  highlight default link lipNativeHelper Function
+  highlight default link lipType Type
+  highlight default link lipFunction Function
+  highlight default link lipNumber Number
+  highlight default link lipOperator Operator
+  highlight default link lipComment Comment
+  highlight default link lipTodo Todo
+  highlight default link lipEscape SpecialChar
+  highlight default link lipString String
+  highlight default link lipMultilineString String
+  let b:current_syntax = 'lip'
+endfunction
+
+function! s:Attach() abort
+  let b:did_ftplugin = 1
+  setlocal comments=:# commentstring=#\ %s
+  setlocal expandtab shiftwidth=2 softtabstop=2
+  setlocal suffixesadd=.lip
+  setlocal omnifunc=LipStandaloneComplete
+  setlocal formatoptions-=t formatoptions+=croql
+  command! -buffer -nargs=1 -complete=customlist,LipStandaloneTemplateNames LipTemplate call LipStandaloneTemplate(<q-args>)
+  let b:undo_ftplugin = 'setlocal comments< commentstring< expandtab< shiftwidth< softtabstop< suffixesadd< omnifunc< formatoptions< | delcommand LipTemplate'
+  let b:did_indent = 1
+  setlocal indentexpr=LipStandaloneIndent(v:lnum)
+  setlocal indentkeys=0{,0},0),0],!^F,o,O
+  let b:undo_indent = 'setlocal indentexpr< indentkeys<'
+  setlocal syntax=lip
+  call s:Syntax()
+endfunction
+
+let &cpoptions = s:save_cpo
+unlet s:save_cpo
+
+augroup LipStandalone
+  autocmd!
+  autocmd FileType lip call s:Attach()
+  autocmd Syntax lip call s:Syntax()
+  " :syntax on 重建内置加载器后，将本文件的高亮规则放在其后执行。
+  autocmd SourcePost */syntax/synload.vim autocmd! LipStandalone Syntax lip call <SID>Syntax()
+augroup END
+]=])
+  vim.filetype.add({ extension = { lip = 'lip' } })
+  -- 兼容在已经打开 .lip 文件后粘贴/重新加载这段配置。
+  if vim.bo.filetype == 'lip' then
+    vim.cmd('doautocmd <nomodeline> FileType lip')
+  elseif vim.fn.expand('%:e') == 'lip' and vim.bo.filetype == '' then
+    vim.bo.filetype = 'lip'
+  end
+end
+
+-- 防止误触 C-z
+vim.keymap.set({'n', 'v', 'i', 'c'}, '<C-z>', '<Nop>')
