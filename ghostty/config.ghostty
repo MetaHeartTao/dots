@@ -1,4 +1,18 @@
 # ~/.config/ghostty/config.ghostty
 
-font-size = 16
-scrollback-limit = 100000
+# 字体与锐度渲染
+font-family = hack
+font-size = 15
+alpha-blending = native
+freetype-load-flags = hinting, force-autohint
+
+# 配色与纯黑背景
+theme = Breeze
+background = #0f0f0f
+
+# 空间与标签栏布局
+window-decoration = false
+gtk-tabs-location = bottom
+
+# history
+scrollback-limit = 1000000
