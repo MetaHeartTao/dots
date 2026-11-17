@@ -12,17 +12,18 @@ set $mod Mod4
 set $moS Mod4+Shift
 set $moC Mod4+Control
 set $dmsc dms ipc call
+set $tag TAG
 
-# 应用程序配置
-set $browser_launcher   firefox
-set $terminal_launcher  ghostty
-set $filer_launcher     nemo
-set $viewer_launcher    evince
+# 应用程序配置(编辑器转tty后，让出的位置暂定viewer。文件管理器??)
+set $spacer_launcher   firefox
+set $returner_launcher ghostty
+set $remover_launcher  nemo
+set $escaper_launcher  evince
 
-set $browser_focuser    "(?i)$browser_launcher"
-set $terminal_focuser   "(?i)$terminal_launcher"
-set $filer_focuser      "(?i)$filer_launcher"
-set $viewer_focuser     "(?i)$viewer_launcher"
+set $spacer_focuser    "(?i)$spacer_launcher"
+set $returner_focuser  "(?i)$returner_launcher"
+set $remover_focuser   "(?i)$remover_launcher"
+set $escaper_focuser   "(?i)$escaper_launcher"
 
 # === Appearance & General Behavior ===
 font pango:hack 20px
@@ -36,13 +37,13 @@ mouse_warping container
 
 # 窗口标题与边框：锁定为传统的浮动窗口样式
 for_window [all] title_window_icon yes
-floating_minimum_size 400 x 300
+floating_minimum_size 300 x 200
 floating_modifier $mod normal
 title_align center
 default_border normal
 default_floating_border normal
 # 窗口间隙
-gaps inner 2px
+gaps inner 1px
 
 # 初始化为 Stacking（堆叠模式）
 workspace_layout stacking
@@ -104,12 +105,12 @@ bindsym $mod+s splith
 bindsym $moS+s splitv
 
 # Edit layout (by south-east corner)
-bindsym $mod+e mode "edit-refine"
-bindsym $moS+e mode "edit-normal"
+bindsym $mod+e mode "edit-normal"
+bindsym $moS+e move position center
 
 # mark a window with "TAG" and swap with it
-bindsym $mod+t mark --toggle TAG
-bindsym $moS+t swap container with mark TAG
+bindsym $mod+t mark --toggle $tag
+bindsym $moS+t swap container with mark $tag
 
 # toggle fullscreen for the focused container Zoom
 bindsym $mod+z layout toggle stacking tabbed
@@ -128,19 +129,19 @@ bindsym $mod+v scratchpad show
 bindsym $moS+v move scratchpad
 
 # task switcher
-bindsym $mod+Tab focus next sibling
+bindsym $mod+Tab [con_mark=$tag] focus
 bindsym $moS+Tab exec --no-startup-id "rofi -theme fullscreen-preview -show window -show-icons"
 
 # 应用精准聚焦与条件拉起
-bindsym $mod+space     [app_id=$browser_focuser] focus
-bindsym $mod+Escape    [app_id=$viewer_focuser] focus
-bindsym $mod+Return    [app_id=$terminal_focuser] focus
-bindsym $mod+BackSpace [app_id=$filer_focuser] focus
+bindsym $mod+space     [app_id=$spacer_focuser] focus
+bindsym $mod+Escape    [app_id=$escaper_focuser] focus
+bindsym $mod+Return    [app_id=$returner_focuser] focus
+bindsym $mod+BackSpace [app_id=$remover_focuser] focus
 
-bindsym $moS+space     exec --no-startup-id $browser_launcher
-bindsym $moS+Escape    exec --no-startup-id $viewer_launcher
-bindsym $moS+Return    exec --no-startup-id $terminal_launcher
-bindsym $moS+BackSpace exec --no-startup-id $filer_launcher
+bindsym $moS+space     exec --no-startup-id $spacer_launcher
+bindsym $moS+Escape    exec --no-startup-id $escaper_launcher
+bindsym $moS+Return    exec --no-startup-id $returner_launcher
+bindsym $moS+BackSpace exec --no-startup-id $remover_launcher
 
 # 基础物理焦点切换+几何挪动（经典的上下左右）
 bindsym $mod+Left  focus left
@@ -184,37 +185,26 @@ for_window [window_role="About"] floating enable
 
 ### 普通编辑模式
 mode "edit-normal" {
-    bindsym $mod+Left  move left  250px
-    bindsym $mod+Down  move down  200px
-    bindsym $mod+Up    move up    200px
-    bindsym $mod+Right move right 250px
+    bindsym Left  focus left
+    bindsym Down  focus down
+    bindsym Up    focus up
+    bindsym Right focus right
 
-    bindsym $moS+Left  resize shrink width  250px
-    bindsym $moS+Down  resize grow   height 200px
-    bindsym $moS+Up    resize shrink height 200px
-    bindsym $moS+Right resize grow   width  250px
+    bindsym $mod+Left  move left  150px
+    bindsym $mod+Down  move down  100px
+    bindsym $mod+Up    move up    100px
+    bindsym $mod+Right move right 150px
 
-    bindsym $mod+c move position center
-    bindsym $moS+c move position center
+    bindsym $moS+Left  resize shrink width  150px
+    bindsym $moS+Down  resize grow   height 100px
+    bindsym $moS+Up    resize shrink height 100px
+    bindsym $moS+Right resize grow   width  150px
 
-    bindsym Space mode "default"
-    bindsym BackSpace mode "default"
-    bindsym Return mode "default"
-    bindsym Escape mode "default"
-}
+    bindsym f focus mode_toggle
+    bindsym $mod+f focus mode_toggle
+    bindsym $moS+f focus mode_toggle
 
-### 精细编辑模式
-mode "edit-refine" {
-    bindsym $mod+Left  move left  50px
-    bindsym $mod+Down  move down  40px
-    bindsym $mod+Up    move up    40px
-    bindsym $mod+Right move right 50px
-
-    bindsym $moS+Left  resize shrink width  50px
-    bindsym $moS+Down  resize grow   height 40px
-    bindsym $moS+Up    resize shrink height 40px
-    bindsym $moS+Right resize grow   width  50px
-
+    bindsym c move position center
     bindsym $mod+c move position center
     bindsym $moS+c move position center
 
