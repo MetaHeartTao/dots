@@ -30,7 +30,7 @@ output "eDP-1" {
 // 外接屏幕（根据 niri msg outputs 的实际名字修改）
 output "HDMI-A-1" {
     // position x=-1920 y=0    // 将第二块屏幕放在主屏左侧
-    position x=0 y=-1080    // 将第二块屏幕放在主屏上侧
+    // position x=0 y=-1080    // 将第二块屏幕放在主屏上侧
 }
 
 // =============================================================================
@@ -51,8 +51,8 @@ layout {
     center-focused-column "never" // always on-overflow
     always-center-single-column
     default-column-display "tabbed"
-    gaps 10                                  // 参照 i3 配置
-    preset-column-widths { proportion 0.75; }
+    gaps 10
+    preset-column-widths { proportion 0.5; }
 
     focus-ring {
         width 10
@@ -60,7 +60,6 @@ layout {
         inactive-color "#2f2a24"
     }
 
-    // --- Tab 标签指示器外观定义 ---
     tab-indicator {
         position "right"
         place-within-column
@@ -76,7 +75,7 @@ layout {
 
 cursor {
     xcursor-theme "breeze-cursors-snow"
-    xcursor-size 36                // 放大（默认一般是 24 像素）
+    xcursor-size 24
 }
 
 // =============================================================================
@@ -116,17 +115,19 @@ recent-windows {
     }
 
     previews {
-        max-height 240
+        max-height 360
         max-scale 0.5
     }
 
     binds {
-        Mod+Tab         { next-window scope="all"; } //scope="output";
-        Mod+Shift+Tab   { previous-window scope="all"; }
-        Alt+Tab         { next-window     scope="workspace"; }
-        Alt+Shift+Tab   { previous-window scope="workspace"; }
-        Alt+grave       { previous-window filter="app-id"; }
-        Alt+Shift+grave { next-window     filter="app-id"; }
+        Mod+Tab           { next-window     scope="all"; }
+        Mod+Shift+Tab     { previous-window scope="all"; }
+        Mod+grave         { next-window     scope="all" filter="app-id"; }
+        Mod+Shift+grave   { previous-window scope="all" filter="app-id"; }
+        Alt+Tab           { next-window     scope="workspace"; }
+        Alt+Shift+Tab     { previous-window scope="workspace"; }
+        Alt+grave         { next-window     scope="workspace" filter="app-id"; }
+        Alt+Shift+grave   { previous-window scope="workspace" filter="app-id"; }
     }
 }
 
@@ -134,36 +135,36 @@ recent-windows {
 //                             按键绑定 (Key Binds)
 // =============================================================================
 binds {
-    Mod+grave { toggle-overview; }
-    Mod+Shift+grave { toggle-overview; }
+    // Quit 锁屏与休眠
+    Mod+Ctrl+Q repeat=false { spawn "dms" "ipc" "call" "lock" "lockAndOutputsOff"; }
+    Mod+Ctrl+Shift+Q repeat=false { spawn "elvish" "-c" "dms ipc call lock lockAndOutputsOff; sleep 1; systemctl suspend"; }
 
-    // 最大化 Zoom
+    // Workshop 清除通知 { spawn "dms" "ipc" "call" "notifications" "clearAll"; }
+    Mod+W repeat=false { spawn "dms" "ipc" "call" "notifications" "toggle"; }
+    Mod+Shift+W repeat=false { spawn "dms" "ipc" "call" "bar" "toggle" "index" "0"; }
+
+    // Dashboard (工作区与桌面总览)
+    Mod+D { toggle-overview; }
+    Mod+Shift+D { toggle-overview; }
+
+    // Auto (自动居中与切换预设列宽)
+    Mod+A repeat=false { center-column; }
+    Mod+Shift+A repeat=false { switch-preset-column-width; }
+
+    // Stack (堆叠/标签页模式)
+    Mod+S repeat=false { toggle-column-tabbed-display; }
+
+    // Expand (伪/窗口化全屏)
+    Mod+E repeat=false { toggle-windowed-fullscreen; }
+
+    // Zoom 最大化
     Mod+Z repeat=false { maximize-column; }
 
-    // 应用启动器 - eXec - current windows, desktop app(drun), commands(run)
-    Mod+X repeat=false {
-        spawn "rofi" "-theme" "gruvbox-dark" "-show" "combi" "-combi-modi" "window,drun,run" "-show-icons";
-    }
+    // eXec 应用启动器 rofi -theme fullscreen-preview -show combi -combi-modi window,drun,run -show-icons
+    Mod+X repeat=false { spawn "dms" "ipc" "call" "spotlight" "toggle"; }
 
-    // 关闭当前窗口 Close
+    // Close 关闭当前窗口
     Mod+Shift+C repeat=false { close-window; }
-
-    // Vertical 垂直平铺与 Tab 标签页之间来回切换
-    Mod+V repeat=false { toggle-column-tabbed-display; }
-
-    // 锁屏与休眠 Blank
-    Mod+Ctrl+B repeat=false { spawn "dms" "ipc" "call" "lock" "lockAndOutputsOff"; }
-    Mod+Ctrl+Shift+B repeat=false {
-        spawn "elvish" "-c" "dms ipc call lock lockAndOutputsOff; sleep 1; systemctl suspend";
-    }
-
-    // 清除通知 Message
-    Mod+M repeat=false { spawn "dms" "ipc" "call" "notifications" "toggle"; }
-    Mod+Shift+M repeat=false { spawn "dms" "ipc" "call" "notifications" "clearAll"; }
-
-    // 默认位置与尺寸
-    Mod+0 repeat=false { center-column; }
-    Mod+Shift+0 repeat=false { switch-preset-column-width; }
 
     // 尺寸微调
     Mod+Minus { set-window-height "-10%"; }
@@ -174,7 +175,6 @@ binds {
     // 左右切换焦点和移动窗口
     Mod+Left  { focus-column-left; }
     Mod+Right { focus-column-right; }
-    // 进入 / 推出 Tab
     Mod+Shift+Left  { consume-or-expel-window-left; }
     Mod+Shift+Right { consume-or-expel-window-right; }
 
@@ -208,11 +208,16 @@ binds {
     Mod+Shift+3 { move-column-to-workspace 3; }
     Mod+Shift+4 { move-column-to-workspace 4; }
 
-    // --- 应用程序启动 ---
-    Mod+Return cooldown-ms=300 { spawn "ghostty"; }
-    Mod+Space cooldown-ms=300 { spawn "firefox"; }
-    Mod+Escape cooldown-ms=300 { spawn "evince"; }
-    Mod+BackSpace cooldown-ms=300 { spawn "nemo"; }
+    // 屏幕管理
+    Mod+Ctrl+Left  { focus-monitor-left; }
+    Mod+Ctrl+Down  { focus-monitor-down; }
+    Mod+Ctrl+Up    { focus-monitor-up; }
+    Mod+Ctrl+Right { focus-monitor-right; }
+
+    Mod+Ctrl+Shift+Left  { move-column-to-monitor-left; }
+    Mod+Ctrl+Shift+Down  { move-column-to-monitor-down; }
+    Mod+Ctrl+Shift+Up    { move-column-to-monitor-up; }
+    Mod+Ctrl+Shift+Right { move-column-to-monitor-right; }
 
     // 音量与亮度控制
     XF86AudioRaiseVolume  allow-when-locked=true { spawn "pactl" "set-sink-volume" "@DEFAULT_SINK@" "+3%"; }
@@ -231,7 +236,7 @@ binds {
 //                               启动项 (Autostart)
 // =============================================================================
 environment {
-    XCURSOR_SIZE "36"
+    XCURSOR_SIZE "24"
     XCURSOR_THEME "breeze-cursors-snow"
     XMODIFIERS "@im=fcitx"
     QT_IM_MODULE "fcitx"
