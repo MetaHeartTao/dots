@@ -65,7 +65,7 @@ layout {
         place-within-column
         hide-when-single-tab
         width 15
-        gap 1
+        gap 2
         gaps-between-tabs 30
         corner-radius 12
         active-color "#B8860B" // 999966 D4AF37 FFD700 F1E2B4
@@ -137,7 +137,7 @@ recent-windows {
 binds {
     // Quit 锁屏与休眠
     Mod+Ctrl+Q repeat=false { spawn "dms" "ipc" "call" "lock" "lockAndOutputsOff"; }
-    Mod+Ctrl+Shift+Q repeat=false { spawn "elvish" "-c" "dms ipc call lock lockAndOutputsOff; sleep 1; systemctl suspend"; }
+    Mod+Ctrl+Shift+Q repeat=false { spawn-sh "dms ipc call lock lockAndOutputsOff; sleep 1; systemctl suspend"; }
 
     // Workshop 清除通知 { spawn "dms" "ipc" "call" "notifications" "clearAll"; }
     Mod+W repeat=false { spawn "dms" "ipc" "call" "notifications" "toggle"; }
@@ -160,10 +160,11 @@ binds {
     // Zoom 最大化
     Mod+Z repeat=false { maximize-column; }
 
-    // eXec 应用启动器 rofi -theme fullscreen-preview -show combi -combi-modi window,drun,run -show-icons
-    Mod+X repeat=false { spawn "dms" "ipc" "call" "spotlight" "toggle"; }
+    // eXec 应用启动器 { spawn "dms" "ipc" "call" "spotlight" "toggle"; }
+    Mod+X repeat=false { spawn-sh "rofi -theme fullscreen-preview -show combi -combi-modi window,drun,run -show-icons"; }
 
-    // Close 关闭当前窗口
+    // Cmd 执行命令
+    Mod+C repeat=false { spawn-sh "rofi -theme docu -dmenu -p 'Cmd> ' -font 'Hack 16' | xargs niri msg action"; }
     Mod+Shift+C repeat=false { close-window; }
 
     // 尺寸微调
@@ -229,7 +230,6 @@ binds {
 
     // 截屏
     Print { screenshot; }
-    Alt+Print { screenshot-window; }
 }
 
 // =============================================================================
