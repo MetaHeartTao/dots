@@ -137,7 +137,7 @@ recent-windows {
 binds {
     // 左上角 (工作区与桌面总览)
     Mod+Escape { toggle-overview; }
-    Mod+Shift+Escape { toggle-overview; }
+    Mod+Shift+Escape { show-hotkey-overlay; }
 
     // Quit 锁屏与休眠
     Mod+Ctrl+Q repeat=false { spawn "dms" "ipc" "call" "lock" "lockAndOutputsOff"; }
@@ -157,15 +157,19 @@ binds {
 
     // Stack (堆叠/标签页模式)
     Mod+S repeat=false { toggle-column-tabbed-display; }
+    Mod+Shift+S repeat=false { reset-window-height; }
 
-    // Expand (伪/窗口化全屏)
-    Mod+E repeat=false { toggle-windowed-fullscreen; }
+    // Expel or Consume (纯功能共轭：向右侧吸收 / 从当前列踢出)
+    Mod+E repeat=false { expel-window-from-column; }
+    Mod+Shift+E repeat=false { consume-window-into-column; }
 
     // Zoom 最大化
     Mod+Z repeat=false { maximize-column; }
+    Mod+Shift+Z repeat=false { toggle-windowed-fullscreen; }
 
-    // eXec 应用启动器 { spawn "dms" "ipc" "call" "spotlight" "toggle"; }
+    // eXec 应用启动器
     Mod+X repeat=false { spawn-sh "rofi -theme fullscreen-preview -show combi -combi-modi window,drun,run -show-icons"; }
+    Mod+Shift+X repeat=false { spawn "dms" "ipc" "call" "spotlight" "toggle"; }
 
     // Cmd 执行命令
     Mod+C repeat=false { spawn-sh "rofi -theme docu -dmenu -p 'Cmd> ' -font 'Hack 16' | xargs niri msg action"; }
@@ -180,8 +184,8 @@ binds {
     // 左右切换焦点和移动窗口
     Mod+Left  { focus-column-left; }
     Mod+Right { focus-column-right; }
-    Mod+Shift+Left  { consume-or-expel-window-left; }
-    Mod+Shift+Right { consume-or-expel-window-right; }
+    Mod+Shift+Left  { move-column-left; }
+    Mod+Shift+Right { move-column-right; }
 
     // 在列内各个 Tab 间切换焦点，或调整窗口前后顺序
     Mod+Down { focus-window-down; } // or-workspace-
@@ -252,3 +256,5 @@ spawn-at-startup "dbus-update-activation-environment" "--systemd" "WAYLAND_DISPL
 spawn-at-startup "/usr/bin/lxqt-policykit-agent"
 spawn-at-startup "dms" "run"
 spawn-at-startup "fcitx5" "-d" "--replace"
+
+// DONE!
