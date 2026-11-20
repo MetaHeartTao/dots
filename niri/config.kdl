@@ -135,6 +135,10 @@ recent-windows {
 //                             按键绑定 (Key Binds)
 // =============================================================================
 binds {
+    // 左上角 (工作区与桌面总览)
+    Mod+Escape { toggle-overview; }
+    Mod+Shift+Escape { toggle-overview; }
+
     // Quit 锁屏与休眠
     Mod+Ctrl+Q repeat=false { spawn "dms" "ipc" "call" "lock" "lockAndOutputsOff"; }
     Mod+Ctrl+Shift+Q repeat=false { spawn-sh "dms ipc call lock lockAndOutputsOff; sleep 1; systemctl suspend"; }
@@ -143,9 +147,9 @@ binds {
     Mod+W repeat=false { spawn "dms" "ipc" "call" "notifications" "toggle"; }
     Mod+Shift+W repeat=false { spawn "dms" "ipc" "call" "bar" "toggle" "index" "0"; }
 
-    // Dashboard (工作区与桌面总览)
-    Mod+D { toggle-overview; }
-    Mod+Shift+D { toggle-overview; }
+    // Detach (脱离平铺：切换窗口浮动与焦点)
+    Mod+D repeat=false { switch-focus-between-floating-and-tiling; }
+    Mod+Shift+D repeat=false { toggle-window-floating; }
 
     // Auto (自动居中与切换预设列宽)
     Mod+A repeat=false { center-column; }
