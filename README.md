@@ -2,7 +2,7 @@
 
 To setup my personal workshop/environment for coding and writing.
 
-- manjaro
+- LMDE
 - niriWM
 - ghostty
 - elvish
