@@ -3,7 +3,7 @@
 // =============================================================================
 
 // Installation::
-// pacman -S rofi dms-shell lxqt-policykit breeze-cursors5 pactl elvish ghostty nvim evince nemo nemo-fileroller
+// intall rofi dms-shell lxqt-policykit breeze-cursors5 pactl elvish ghostty nvim evince nemo nemo-fileroller
 //
 // gsettings set org.nemo.desktop show-desktop-icons false
 // gsettings set org.gnome.desktop.interface cursor-theme 'breeze-cursors-snow'
@@ -47,7 +47,7 @@ input {
 // =============================================================================
 prefer-no-csd
 
-layout {
+layout { // using dms color, to some extend
     center-focused-column "never"
     always-center-single-column
     default-column-display "tabbed"
@@ -63,6 +63,7 @@ layout {
         width 1.5
         active-color "#ffffff2e"
         inactive-color "#ffffff0d"
+        urgent-color   "#f2b8b5"
     }
 
     // [修改] 柔和的指示器配色与宽度，避免高饱和金色突兀感
@@ -74,8 +75,9 @@ layout {
         gap 3
         gaps-between-tabs 30
         corner-radius 9
-        active-color "#89b4fa"
+        active-color   "#42a5f5"
         inactive-color "#45475a"
+        urgent-color   "#f2b8b5"
     }
 
     // [修改] 增强扩散范围，营造接近原生 DE 的自然悬浮阴影
@@ -84,11 +86,14 @@ layout {
         softness 36
         spread 6
         offset x=0 y=9
-        color "#00000055"
+        color "#00000060"
         inactive-color "#00000030"
     }
 
-    background-color "#1e2030"
+    insert-hint { color "#42a5f580"; }
+
+    // background-color "#1e2030"
+    background-color "transparent"
 }
 
 // [新增] 概览模式（Mod+Escape）视觉优化，接近 GNOME Activities
@@ -169,8 +174,8 @@ recent-windows {
     open-delay-ms 150
 
     highlight {
-        active-color "#89b4fa66" // [修改] 呼应主色调的半透明高亮
-        urgent-color "#f38ba8ff"
+        active-color   "#89b4fa66"
+        urgent-color   "#f2b8b5cc"
         padding 24
         corner-radius 12
     }
@@ -202,7 +207,7 @@ binds {
 
     // 键盘快捷键抑制的解除
     Mod+BackSpace repeat=false { toggle-keyboard-shortcuts-inhibit; }
-    // Mod+Ctrl+Shift+BackSpace repeat=false { quit; }
+    Mod+Ctrl+Shift+BackSpace repeat=false { quit; }
 
     // Quit 锁屏与休眠
     Mod+Ctrl+Q repeat=false { spawn "dms" "ipc" "call" "lock" "lockAndOutputsOff"; }
