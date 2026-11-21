@@ -28,10 +28,8 @@ output "eDP-1" {
 }
 
 // 外接屏幕（根据 niri msg outputs 的实际名字修改）
-output "HDMI-A-1" {
-    // position x=-1920 y=0    // 将第二块屏幕放在主屏左侧
-    // position x=0 y=-1080    // 将第二块屏幕放在主屏上侧
-}
+output "HDMI-A-1" { }
+// 将第二块屏幕放在左侧:position x=-1920 y=0; 放在上侧:position x=0 y=-1080
 
 // =============================================================================
 //                             输入设备配置 (Input)
@@ -47,30 +45,69 @@ input {
 // =============================================================================
 //                             布局与外观 (Layout)
 // =============================================================================
+prefer-no-csd
+
 layout {
-    center-focused-column "never" // always on-overflow
+    center-focused-column "never"
     always-center-single-column
     default-column-display "tabbed"
-    gaps 10
+    gaps 12 // [修改] 从 10 微调至 12，增加现代桌面的呼吸感
     preset-column-widths { proportion 0.5; }
 
-    focus-ring {
-        width 10
-        active-color "#644264"
-        inactive-color "#2f2a24"
+    // [修改] 关闭生硬的 6px 粗聚焦环，改用下方的微光描边
+    focus-ring { off; }
+
+    // [新增] 类似 GNOME Libadwaita / KDE Breeze 的细边框
+    border {
+        on
+        width 1.5
+        active-color "#ffffff2e"
+        inactive-color "#ffffff0d"
     }
 
+    // [修改] 柔和的指示器配色与宽度，避免高饱和金色突兀感
     tab-indicator {
         position "right"
         place-within-column
         hide-when-single-tab
-        width 15
-        gap 2
+        width 6
+        gap 3
         gaps-between-tabs 30
-        corner-radius 12
-        active-color "#B8860B" // 999966 D4AF37 FFD700 F1E2B4
-        inactive-color "#366363" // "#3f2f3f"
+        corner-radius 9
+        active-color "#89b4fa"
+        inactive-color "#45475a"
     }
+
+    // [修改] 增强扩散范围，营造接近原生 DE 的自然悬浮阴影
+    shadow {
+        on
+        softness 36
+        spread 6
+        offset x=0 y=9
+        color "#00000055"
+        inactive-color "#00000030"
+    }
+
+    background-color "#1e2030"
+}
+
+// [新增] 概览模式（Mod+Escape）视觉优化，接近 GNOME Activities
+overview {
+    zoom 0.5
+    backdrop-color "#181825"
+}
+
+animations {
+    workspace-switch { spring damping-ratio=0.93 stiffness=800 epsilon=0.0001; }
+    window-open {
+        duration-ms 180
+        curve "ease-out-cubic"
+    }
+    window-close {
+        duration-ms 150
+        curve "ease-out-quad"
+    }
+    horizontal-view-movement { spring damping-ratio=0.93 stiffness=750 epsilon=0.0001; }
 }
 
 cursor {
@@ -79,18 +116,42 @@ cursor {
 }
 
 // =============================================================================
-//                         窗口规则 (Window Rules)
+//                         窗口与图层规则 (Window & Layer Rules)
 // =============================================================================
+// [修改] 合并重复规则；取消全局半透明以保证当前工作窗口 100% 锐利清晰
 window-rule {
     geometry-corner-radius 12
     clip-to-geometry true
     default-column-width { proportion 0.75; }
 }
 
+// [修改] 仅对非聚焦窗口轻微降透，自然突出当前焦点（KDE 焦点跟随质感）
 window-rule {
-    match app-id="lxqt-policykit-agent" // title?
+    match is-focused=false
+    opacity 0.95
+}
+
+// [新增] 所有浮动窗口统一增强深邃投影，区分于平铺层级
+window-rule {
+    match is-floating=true
+    shadow {
+        softness 45
+        spread 6
+        offset x=0 y=12
+        color "#00000075"
+    }
+}
+
+window-rule {
+    match app-id="lxqt-policykit-agent"
     open-floating true
     open-focused true
+}
+
+// [新增] 将 DMS 壁纸层纳入概览模式的背景中（若壁纸未显示可运行 niri msg layers 核对 namespace）
+layer-rule {
+    match namespace="^dms.*wallpaper.*"
+    place-within-backdrop true
 }
 
 // =============================================================================
@@ -108,10 +169,10 @@ recent-windows {
     open-delay-ms 150
 
     highlight {
-        active-color "#999999ff"
-        urgent-color "#ff9999ff"
-        padding 30
-        corner-radius 10
+        active-color "#89b4fa66" // [修改] 呼应主色调的半透明高亮
+        urgent-color "#f38ba8ff"
+        padding 24
+        corner-radius 12
     }
 
     previews {
@@ -139,6 +200,10 @@ binds {
     Mod+Escape { toggle-overview; }
     Mod+Shift+Escape { show-hotkey-overlay; }
 
+    // 键盘快捷键抑制的解除
+    Mod+BackSpace repeat=false { toggle-keyboard-shortcuts-inhibit; }
+    // Mod+Ctrl+Shift+BackSpace repeat=false { quit; }
+
     // Quit 锁屏与休眠
     Mod+Ctrl+Q repeat=false { spawn "dms" "ipc" "call" "lock" "lockAndOutputsOff"; }
     Mod+Ctrl+Shift+Q repeat=false { spawn-sh "dms ipc call lock lockAndOutputsOff; sleep 1; systemctl suspend"; }
@@ -159,9 +224,9 @@ binds {
     Mod+S repeat=false { toggle-column-tabbed-display; }
     Mod+Shift+S repeat=false { reset-window-height; }
 
-    // Expel or Consume (纯功能共轭：向右侧吸收 / 从当前列踢出)
-    Mod+E repeat=false { expel-window-from-column; }
-    Mod+Shift+E repeat=false { consume-window-into-column; }
+    // East (Expel or Consume) (W-E:右移; W-S-E:左移)
+    Mod+E repeat=false { consume-or-expel-window-right; }
+    Mod+Shift+E repeat=false { consume-or-expel-window-left; }
 
     // Zoom 最大化
     Mod+Z repeat=false { maximize-column; }
@@ -194,10 +259,10 @@ binds {
     Mod+Shift+Up   { move-window-up; }
 
     // 首尾列快速聚焦或移动
-    Mod+HOME { focus-column-first; }
-    Mod+END  { focus-column-last;  }
-    Mod+Shift+HOME { move-column-to-first; }
-    Mod+Shift+END  { move-column-to-last;  }
+    Mod+Home { focus-column-first; }
+    Mod+End  { focus-column-last;  }
+    Mod+Shift+Home { move-column-to-first; }
+    Mod+Shift+End  { move-column-to-last;  }
 
     // 把当前列移动到 上 / 下 一个工作区
     Mod+Page_Up   { focus-workspace-up; }
@@ -233,8 +298,8 @@ binds {
     XF86AudioLowerVolume  allow-when-locked=true { spawn "pactl" "set-sink-volume" "@DEFAULT_SINK@" "-3%"; }
     XF86AudioMute         allow-when-locked=true { spawn "pactl" "set-sink-mute"   "@DEFAULT_SINK@" "toggle"; }
     XF86AudioMicMute      allow-when-locked=true { spawn "pactl" "set-source-mute" "@DEFAULT_SOURCE@" "toggle"; }
-    XF86MonBrightnessUp   allow-when-locked=true { spawn "brightnessctl" "set" "3%+"; }
-    XF86MonBrightnessDown allow-when-locked=true { spawn "brightnessctl" "set" "3%-"; }
+    XF86MonBrightnessUp   allow-when-locked=true { spawn "brightnessctl" "--class=backlight" "set" "3%+"; }
+    XF86MonBrightnessDown allow-when-locked=true { spawn "brightnessctl" "--class=backlight" "set" "3%-"; }
 
     // 截屏
     Print { screenshot; }
@@ -247,14 +312,14 @@ environment {
     XCURSOR_SIZE "24"
     XCURSOR_THEME "breeze-cursors-snow"
     XMODIFIERS "@im=fcitx"
+    GTK_IM_MODULE "fcitx"
+    SDL_IM_MODULE "fcitx"
     QT_IM_MODULE "fcitx"
-    QT_QPA_PLATFORM "wayland"
+    QT_QPA_PLATFORM "wayland;xcb"
     QT_QPA_PLATFORMTHEME "gnome"
 }
 
-spawn-at-startup "dbus-update-activation-environment" "--systemd" "WAYLAND_DISPLAY" "XDG_CURRENT_DESKTOP" "DISPLAY" "LANG" "LC_ALL" "XMODIFIERS" "QT_IM_MODULE" "INPUT_METHOD" "SDL_IM_MODULE" "LC_CTYPE"
+spawn-at-startup "dbus-update-activation-environment" "--systemd" "WAYLAND_DISPLAY" "XDG_CURRENT_DESKTOP" "DISPLAY" "LANG" "LC_ALL" "XMODIFIERS" "INPUT_METHOD" "GTK_IM_MODULE" "SDL_IM_MODULE" "QT_IM_MODULE" "LC_CTYPE"
 spawn-at-startup "/usr/bin/lxqt-policykit-agent"
 spawn-at-startup "dms" "run"
 spawn-at-startup "fcitx5" "-d" "--replace"
-
-// DONE!
