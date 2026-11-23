@@ -1,10 +1,10 @@
 !!Revised on `xmodmap -pke`.
-!!ScrollLock -> Application -> RightShift -> BackSpace
-!!CapsLock   -> Escape   ;; BreakPause -> Windows
+!!CapsLock   -> Escape
 
 !clear control
 !clear mod4
 clear lock
+
 keycode   8 =
 keycode   9 = Escape NoSymbol Escape NoSymbol Escape
 keycode  10 = 1 exclam 1 exclam 1 exclam
@@ -59,7 +59,7 @@ keycode  58 = h H h H h H
 keycode  59 = j J j J j J
 keycode  60 = k K k K k K
 keycode  61 = l L l L l L
-keycode  62 = BackSpace BackSpace BackSpace BackSpace BackSpace BackSpace
+keycode  62 = Shift_R NoSymbol Shift_R NoSymbol Shift_R
 keycode  63 = KP_Multiply KP_Multiply KP_Multiply KP_Multiply KP_Multiply KP_Multiply XF86ClearGrab
 keycode  64 = Alt_L Meta_L Alt_L Meta_L Alt_L Meta_L
 keycode  65 = space NoSymbol space NoSymbol space
