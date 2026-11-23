@@ -5,7 +5,7 @@
 # A:安排、S:切分、E:编辑、T:标记 4
 # Z:最大、X:执行、C:关闭、V:最小 4
 # 空格、回车、退格、Esc专用于浏览器、终端、文件、PDF。4
-# 上下左右按方向聚焦, PageUp/Dn与1234管工作区、Home/End管屏幕。12
+# 上下左右按方向聚焦、1234管工作区、PageUp/Dn/Home/End管屏幕。12
 
 # === Variables ===
 set $mod Mod4
@@ -41,6 +41,7 @@ floating_modifier $mod normal
 title_align center
 default_border normal
 default_floating_border normal
+
 # 窗口间隙
 gaps inner 1px
 
@@ -165,13 +166,12 @@ bindsym $moS+2 move container to workspace number 2
 bindsym $moS+3 move container to workspace number 3
 bindsym $moS+4 move container to workspace number 4
 
-# Gnome like workspacing
-bindsym $mod+Page_Up   workspace prev
-bindsym $mod+Page_Down workspace next
-bindsym $moS+Page_Up   move container to workspace prev
-bindsym $moS+Page_Down move container to workspace next
-
 # 屏幕聚焦
+bindsym $mod+Page_Up   output up
+bindsym $mod+Page_Down output down
+bindsym $moS+Page_Up   move container to output up
+bindsym $moS+Page_Down move container to output down
+
 bindsym $mod+Home focus output left
 bindsym $mod+End  focus output right
 bindsym $moS+Home move container to output left
