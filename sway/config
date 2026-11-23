@@ -1,5 +1,5 @@
 # ==============================================================================
-#   SWAY CONFIG; with dms + rofi
+#   SWAY CONFIG; with dms + wlr-utils
 # ==============================================================================
 # Q:锁屏、W:外壳、D:深层、F:悬浮 4
 # A:安排、S:切分、E:编辑、T:标记 4
@@ -10,7 +10,6 @@
 # === Variables ===
 set $mod Mod4
 set $moS Mod4+Shift
-set $moC Mod4+Control
 set $dmsc dms ipc call
 set $tag TAG
 
@@ -54,6 +53,7 @@ exec_always --no-startup-id /usr/bin/lxqt-policykit-agent
 
 # 启动常用应用组
 exec --no-startup-id dms run
+exec --no-startup-id wlr-overlayd
 exec --no-startup-id fcitx5 -d --replace
 
 # 显示器配置 swaymsg -t get_outputs
@@ -81,8 +81,8 @@ bindsym XF86MonBrightnessUp   exec --no-startup-id "brightnessctl set 3%+"
 bindsym XF86MonBrightnessDown exec --no-startup-id "brightnessctl set 3%-"
 
 # 锁屏与休眠 Quit
-bindsym $moC+q exec --no-startup-id $dmsc lock lockAndOutputsOff
-bindsym $moC+Shift+q exec --no-startup-id $dmsc lock lockAndOutputsOff; sleep 0.1; systemctl suspend
+bindsym $mod+Control+q exec --no-startup-id $dmsc lock lockAndOutputsOff
+bindsym $moS+Control+q exec --no-startup-id $dmsc lock lockAndOutputsOff; sleep 1; systemctl suspend
 
 # Workshop bar/msg
 bindsym $mod+w exec --no-startup-id $dmsc bar toggle index 0
@@ -117,11 +117,11 @@ bindsym $mod+z layout toggle stacking tabbed
 bindsym $moS+z fullscreen toggle
 
 # 应用启动器 eXec
-bindsym $mod+x exec --no-startup-id "rofi -theme fullscreen-preview -show combi -combi-modi window,drun,run -show-icons"
-bindsym $moS+x exec --no-startup-id $dmsc spotlight toggle
+bindsym $mod+x exec --no-startup-id $dmsc spotlight toggle
+bindsym $moS+x exec --no-startup-id $dmsc control-center toggle
 
 # 关闭窗口与底层命令透传 Close
-bindsym $mod+c exec --no-startup-id "rofi -theme docu -dmenu -p 'Cmd> ' -font 'Hack 16' | xargs swaymsg"
+bindsym $mod+c shortcuts_inhibitor toggle
 bindsym $moS+c kill
 
 # 暂存区 Void
@@ -129,8 +129,8 @@ bindsym $mod+v scratchpad show
 bindsym $moS+v move scratchpad
 
 # task switcher
-bindsym $mod+Tab [con_mark=$tag] focus
-bindsym $moS+Tab exec --no-startup-id "rofi -theme fullscreen-preview -show window -show-icons"
+bindsym $mod+Tab exec --no-startup-id wlr-switcher
+bindsym $moS+Tab exec --no-startup-id wlr-switcher --layout grid --hints
 
 # 应用精准聚焦与条件拉起
 bindsym $mod+space     [app_id=$spacer_focuser] focus
