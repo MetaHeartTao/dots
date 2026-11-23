@@ -9,10 +9,10 @@
 # 缩写   g→git  v→nvim  ||→| less  >dn→> /dev/null 2>&1
 # Python py ipy pipi
 #
-# ── 安装（Manjaro）────────────────────────────────────────────
-# sudo pacman -S starship zoxide fzf trash-cli tree bsdtar yazi
+# ── 安装 ──────────────────────────────────────────────────────
+# install starship zoxide fzf trash-cli tree bsdtar yazi
 #
-# ── 一次性设置（写进各工具自己的配置，不用放在 rc 里）────────
+# ── 一次性设置（写进各工具自己的配置，不用放在 rc 里）─────────
 #   go env -w GOPROXY=https://goproxy.cn,direct
 #   pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
 # ──────────────────────────────────────────────────────────────
