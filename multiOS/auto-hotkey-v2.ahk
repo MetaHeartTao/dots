@@ -36,8 +36,9 @@ sc035::l
 ; --- 功能键映射 ---
 ; CapsLock -> Escape
 sc03a::Esc
-; RightShift -> Backspace
-RShift::BackSpace
+
+;;RightShift -> Backspace
+;;RShift::BackSpace
 
 ; --- 窗口置顶功能 (v2 语法升级) ---
 ^`:: {
