@@ -2,7 +2,7 @@
 --
 -- 设计原则：默认键优先，少量例外有明确理由
 --   · Q/gQ、- 等兼容键只为 0.12 模拟 0.13 行为；保存、折行等少数人体工学键另行说明
---   · 工作流键主要放在 <Leader>（空格）下，按功能分组：b c d e f g o p q r s t
+--   · 工作流键主要放在 <Leader>（空格）下，按功能分组：b c d e f g m n o p q r s t
 --   · 只在某种文件里有用的键（Tex / Python / Go）只在该文件类型的缓冲区里生效
 --
 -- ╔══════════════════════════════ PLUGINS ══════════════════════════════════
@@ -37,6 +37,8 @@
 -- ║   <Space>g  .go 内 r 运行 t/f/T 测试 b 构建 F 格式化 i 整理 import
 -- ║   <Space>o  r 运行任务 o 面板 l 重跑 a 操作 s shell 命令
 -- ║   <Space>p  .py 内 r 运行 a 参数 w 监视 d 调试 b 断点 t/f/T 测试 i/x Ruff v 解释器 p REPL s 发送
+-- ║   <Space>m  a/w 表格对齐（预览） .md 内 p/q PDF 实时预览/停止
+-- ║   <Space>n  h 通知详情（历史） d 清除通知 s 搜索通知(没实现，当作show - 而不是search吧)
 -- ║   <Space>q  h 内联提示 d 诊断展开 s 拼写 w 去行尾空白
 -- ║   <Space>r  f Python格式化 G Go格式化
 -- ║   <Space>s  f 文件 g 全文 w 光标词 r 恢复
@@ -74,8 +76,13 @@ local USER = {
   inlay_hints  = false,                      -- LSP 内联类型提示默认开关（<Space>qh 切换）
   native_multicursor = true,                 -- 0.13+ 用内置多光标（同为 Q/gQ）；false = 继续用插件
   latex_engine = "-xelatex",                 -- latexmk 引擎: -xelatex / -lualatex / -pdf
+  markdown_pdf_engine = "xelatex",           -- Pandoc PDF 引擎: xelatex / lualatex / pdflatex
+  markdown_cjk_font = "Noto Sans CJK SC",
+  markdown_main_font = "Noto Serif CJK SC",
+  markdown_mono_font = "Hack",
+  markdown_geometry = "a4paper,margin=22mm",
   -- 按顺序尝试，都没有就用系统默认程序；[Win] Windows 上会再自动尝试 SumatraPDF
-  pdf_viewers  = { "okular", "evince", "zathura" },
+  pdf_viewers  = { "evince", "okular", "zathura" }, -- PDF 阅读器；支持外部文件变化后自动重载
   bigfile_mb   = 5,                          -- 超过此大小：关高亮 / 折叠 / LSP / diff / undo 文件
   -- PATH 里找不到 LSP / ruff 时，再到这些目录找（uv tool / pipx 在 Windows 上也装到 ~/.local/bin）
   -- [Win] 另会自动加入：mason、npm、scoop、winget、pip --user、cargo、conda base 的目录（见第 9 节）
@@ -415,7 +422,6 @@ local pick = use("mini.pick", function(m)
   local b = m.builtin
   map("n", "<Leader>ss", ":1,$s//gc<Left><Left><Left>", { desc = "Replace" })
   map("n", "<Leader>sh", ":1,$s/[\\u200b-\\u200d\\ufeff]//ge", { desc = "HidenChar clear" })
-  -- map("n", "<Leader>sh", ":1,$s/\\%u200b\\|\\%u200c\\|\\%u200d\\|\\%ufeff//ge<CR>", { desc = "Clear Hidden Chars" })
   map("n", "<leader>sf", function() b.files({ tool = pick_tool(has("rg") or has("fd")) }) end, { desc = "Files" })
   map("n", "<leader>sg", function()
     local t = pick_tool(has("rg"))
@@ -470,6 +476,22 @@ use("mini.surround", function(m)
   map("n", "yss", "ys_", { remap = true, desc = "Surround line" })
 end)
 
+-- 对齐：保留原生 ga（字符编码），markdown用 <Leader>ma / <Leader>ms。
+use("mini.align", function(m)
+  m.setup({
+    mappings = { start = "<Leader>ma", start_with_preview = "<Leader>mw" },
+  })
+end)
+
+-- 通知管理（接管 vim.notify）+ 新建快捷操作
+use("mini.notify", function(m)
+  m.setup()
+  vim.notify = m.make_notify()
+  map("n", "<leader>nh", function() m.show_history() end, { desc = "Notify history" })
+  map("n", "<leader>nd", function() m.clear() end, { desc = "Dismiss notifications" })
+  map("n", "<leader>ns", function() m.show_history() end, { desc = "Show notification history" })
+end)
+
 -- 按键提示
 local clue_mod = use("mini.clue", function(clue)
   local clues = {
@@ -481,6 +503,8 @@ local clue_mod = use("mini.clue", function(clue)
     { mode = { "n", "x" }, keys = "<Leader>e", desc = "+Explorer" },
     { mode = { "n", "x" }, keys = "<Leader>f", desc = "+Files" },
     { mode = { "n", "x" }, keys = "<Leader>g", desc = "+ --- Go ---" },
+    { mode = { "n", "x" }, keys = "<Leader>m", desc = "+Markdown" },
+    { mode = { "n", "x" }, keys = "<Leader>n", desc = "+Notify" },
     { mode = { "n", "x" }, keys = "<Leader>o", desc = "+Overseer" },
     { mode = { "n", "x" }, keys = "<Leader>p", desc = "+ --- Python ---" },
     { mode = { "n", "x" }, keys = "<Leader>q", desc = "+Quench" },
@@ -1284,10 +1308,10 @@ local function latexmk(args, title)
   run_job({ name = title, cmd = c, cwd = vim.fs.dirname(file) })
 end
 
-local function view_pdf()
-  local pdf = vim.fn.expand("%:p:r") .. ".pdf"
+local function view_pdf(pdf)
+  pdf = pdf or (vim.fn.expand("%:p:r") .. ".pdf")
   if vim.fn.filereadable(pdf) == 0 then
-    return vim.notify("找不到 PDF，请先编译 (<Space>tt)", L.WARN)
+    return vim.notify("找不到 PDF，请先编译", L.WARN)
   end
   local viewers = vim.deepcopy(USER.pdf_viewers)
   if IS_WIN then   -- [Win] SumatraPDF 不锁文件（Adobe 会锁，latexmk 写不进去）、支持 synctex
@@ -1318,7 +1342,158 @@ ft_keys({ "tex", "plaintex" }, function(k)
 end)
 
 ----------------------------------------------------------------------
--- 11. Python（与 Tex 同样：优先交给 Overseer，错误进 quickfix；没有 Overseer 时在底部终端运行）
+-- 11. Markdown（Pandoc + XeLaTeX + PDF live preview）
+--     编辑：Neovim 原生 + mini.nvim
+--     预览：<Space>mp 启动；保存自动编译；Evince / Okular 自动重载 PDF
+----------------------------------------------------------------------
+local markdown_states = {}
+
+local function markdown_compile(buf)
+  local file = vim.api.nvim_buf_get_name(buf)
+  if file == "" or vim.bo[buf].buftype ~= "" then
+    return vim.notify("请先保存 Markdown 文件", L.WARN)
+  end
+
+  local state = markdown_states[buf]
+  if not state then return end
+
+  -- 编译期间再次保存，只安排一次后续编译，避免并发写入同一 PDF。
+  if state.running then
+    state.pending = true
+    return
+  end
+
+  local pandoc = find_exe("pandoc")
+  local engine = find_exe(USER.markdown_pdf_engine)
+  if not pandoc then
+    state.enabled = false
+    return vim.notify("未找到 Pandoc", L.ERROR)
+  end
+  if not engine then
+    state.enabled = false
+    return vim.notify("未找到 PDF 引擎: " .. USER.markdown_pdf_engine, L.ERROR)
+  end
+
+  local dir = vim.fs.dirname(file)
+  local stem = vim.fn.fnamemodify(file, ":r")
+  local output = stem .. ".preview.pdf"
+  local tmp = stem .. ".preview.tmp.pdf"
+
+  local args = {
+    pandoc, file,
+    "--standalone",
+    "--pdf-engine=" .. engine,
+    "--highlight-style=tango",
+    "-V", "CJKmainfont=" .. USER.markdown_cjk_font,
+    "-V", "mainfont=" .. USER.markdown_main_font,
+    "-V", "monofont=" .. USER.markdown_mono_font,
+    "-V", "geometry=" .. USER.markdown_geometry,
+    "-o", tmp,
+  }
+
+  state.running = true
+  local ok, err = pcall(vim.system, args, { cwd = dir, text = true }, function(result)
+    vim.schedule(function()
+      state.running = false
+
+      if result.code == 0 then
+        -- 先编译临时文件，成功后再替换预览 PDF，避免阅读器读到半成品。
+        local renamed, rename_err = vim.uv.fs_rename(tmp, output)
+        if not renamed then
+          vim.fn.delete(tmp)
+          vim.notify("替换预览 PDF 失败: " .. tostring(rename_err), L.ERROR)
+        elseif state.open_after then
+          state.open_after = false
+          view_pdf(output)
+        end
+      else
+        vim.fn.delete(tmp)
+        local message = vim.trim((result.stderr or "") .. "\n" .. (result.stdout or ""))
+        vim.notify(
+          "Pandoc 编译失败:\n" .. (message ~= "" and message or ("退出码 " .. result.code)),
+          L.ERROR,
+          { title = "Markdown PDF" }
+        )
+      end
+
+      if state.pending then
+        state.pending = false
+        markdown_compile(buf)
+      end
+    end)
+  end)
+
+  if not ok then
+    state.running = false
+    vim.notify("无法启动 Pandoc: " .. tostring(err), L.ERROR)
+  end
+end
+
+ft_keys("markdown", function(k, buf)
+  -- Markdown 是纯文本：不硬换行、不隐藏标记；列表仍可用 gq 格式化。
+  vim.bo[buf].expandtab = true
+  vim.bo[buf].shiftwidth = 2
+  vim.bo[buf].tabstop = 2
+  vim.bo[buf].softtabstop = 2
+  vim.bo[buf].textwidth = 0
+  local formatoptions = vim.bo[buf].formatoptions:gsub("[tcro]", "")
+  for _, flag in ipairs({ "q", "j" }) do
+    if not formatoptions:find(flag, 1, true) then formatoptions = formatoptions .. flag end
+  end
+  vim.bo[buf].formatoptions = formatoptions
+
+  markdown_states[buf] = {
+    enabled = false,
+    running = false,
+    pending = false,
+    open_after = false,
+  }
+
+  local function start_preview()
+    local ok, err = try_cmd("silent update")
+    if not ok then
+      return vim.notify("保存失败: " .. tostring(err), L.ERROR)
+    end
+    local state = markdown_states[buf]
+    if not state then return end
+    state.enabled = true
+    state.open_after = true
+    markdown_compile(buf)
+  end
+
+  local function stop_preview()
+    local state = markdown_states[buf]
+    if not state then return end
+    state.enabled = false
+    state.pending = false
+    state.open_after = false
+    vim.notify("Markdown 自动预览已停止")
+  end
+
+  vim.api.nvim_buf_create_user_command(buf, "MarkdownPreview", start_preview, {})
+  vim.api.nvim_buf_create_user_command(buf, "MarkdownPreviewStop", stop_preview, {})
+
+  au("BufWritePost", {
+    group = group,
+    buffer = buf,
+    callback = function()
+      local state = markdown_states[buf]
+      if state and state.enabled then markdown_compile(buf) end
+    end,
+  })
+
+  au("BufWipeout", {
+    group = group,
+    buffer = buf,
+    callback = function() markdown_states[buf] = nil end,
+  })
+
+  k("n", "<LocalLeader>mp", start_preview, "Preview PDF in live ")
+  k("n", "<LocalLeader>mq", stop_preview, "Quit PDF live preview")
+end)
+
+----------------------------------------------------------------------
+-- 12. Python（与 Tex 同样：优先交给 Overseer，错误进 quickfix；没有 Overseer 时在底部终端运行）
 --     可选外部工具：ruff（lint/格式化）、项目环境里的 pytest / ipython；缺了只跳过对应功能
 ----------------------------------------------------------------------
 -- 续行缩进用 1 个 shiftwidth（PEP 8 风格，内置默认是 2 个）
@@ -1604,7 +1779,7 @@ au("LspAttach", {
 })
 
 ----------------------------------------------------------------------
--- 12. Go（与 Python 共用项目根、Overseer、quickfix 和文件类型局部键）
+-- 13. Go（与 Python 共用项目根、Overseer、quickfix 和文件类型局部键）
 --     需要外部工具：go；语义补全/诊断/格式化需要 gopls（go install golang.org/x/tools/gopls@latest）
 ----------------------------------------------------------------------
 local GO_EFM = [[%f:%l:%c: %m,%f:%l: %m]]
@@ -1708,7 +1883,7 @@ au("LspAttach", {
 })
 
 ----------------------------------------------------------------------
--- 13. Neovide（缩放键沿用 Neovide 官方 FAQ 的写法）
+-- 14. Neovide（缩放键沿用 Neovide 官方 FAQ 的写法）
 ----------------------------------------------------------------------
 o.guifont = ("%s:h%d"):format(USER.font, USER.font_size)
 
@@ -1735,7 +1910,7 @@ if vim.g.neovide then
 end
 
 ----------------------------------------------------------------------
--- 14. 缺失插件汇总提示（只提示一次）
+-- 15. 缺失插件汇总提示（只提示一次）
 ----------------------------------------------------------------------
 if #missing > 0 then
   vim.schedule(function()
@@ -1755,7 +1930,7 @@ if #missing > 0 then
 end
 
 ----------------------------------------------------------------------
--- 15. LIP
+-- 16. LIP
 ----------------------------------------------------------------------
 -- LIP 单文件编辑支持，整段复制到自己的 init.lua 即可。
 -- 内置：.lip 文件识别、高亮、结构缩进、注释设置、补全、代码模板。
