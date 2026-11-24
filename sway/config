@@ -1,0 +1,330 @@
+# ==============================================================================
+#   SWAY CONFIG; with Noctalia v5+
+# ==============================================================================
+# Q:锁屏、W:外壳、D:深层、F:悬浮 4
+# A:安排、S:切分、E:编辑、T:标记 4
+# Z:最大、X:执行、C:关闭、V:最小 4
+# 空格、回车、退格、Esc专用于浏览器、终端、文件、PDF。4
+# 上下左右按方向聚焦、1234管工作区、PageUp/Dn/Home/End管屏幕。12
+
+
+# ==============================================================================
+#   VARIABLES
+# ==============================================================================
+
+set $mod Mod4
+set $moS Mod4+Shift
+
+set $nsc noctalia msg
+set $tag TAG
+
+
+# === Applications ===
+
+set $spacer_launcher   firefox
+set $returner_launcher ghostty
+set $remover_launcher  nemo
+set $escaper_launcher  evince
+
+# app_id matching
+set $spacer_focuser    (?i)$spacer_launcher
+set $returner_focuser  (?i)$returner_launcher
+set $remover_focuser   (?i)$remover_launcher
+set $escaper_focuser   (?i)$escaper_launcher
+
+
+# ==============================================================================
+#   APPEARANCE & GENERAL BEHAVIOR
+# ==============================================================================
+
+font pango:hack 15px
+
+show_marks yes
+focus_wrapping force
+
+# Multiscreen
+workspace_auto_back_and_forth no
+focus_follows_mouse no
+mouse_warping container
+
+# Window decorations
+floating_minimum_size 300 x 200
+floating_modifier $mod normal
+
+title_align center
+default_border normal
+default_floating_border normal
+
+# Gaps
+gaps inner 1px
+
+# Default layout
+workspace_layout stacking
+
+
+# ==============================================================================
+#   ENVIRONMENT & AUTOSTART
+# ==============================================================================
+
+# IMPORTANT:
+# XMODIFIERS=@im=fcitx should be set in the graphical login environment
+# BEFORE Sway starts, so that Sway-launched applications inherit it.
+#
+# This command synchronizes existing session variables to D-Bus and systemd.
+# It does not set XMODIFIERS for Sway or its already-running processes.
+
+exec_always --no-startup-id dbus-update-activation-environment --systemd \
+    WAYLAND_DISPLAY XDG_CURRENT_DESKTOP=sway XMODIFIERS
+
+# Fcitx5 input method daemon
+exec --no-startup-id fcitx5 -d --replace
+
+# Noctalia desktop shell
+exec --no-startup-id noctalia
+
+
+# ==============================================================================
+#   DISPLAY CONFIGURATION
+# ==============================================================================
+
+output eDP-1 resolution 1920x1200@60Hz
+
+# Workspace output assignment;; swaymsg -t get_outputs
+workspace 1 output DP-3 eDP-1
+workspace 2 output DP-3 eDP-1
+workspace 3 output eDP-1
+workspace 4 output eDP-1
+
+
+# ==============================================================================
+#   INPUT CONFIGURATION
+# ==============================================================================
+
+input type:keyboard {
+    xkb_layout "cell"
+}
+
+seat * xcursor_theme breeze-cursors-snow 24
+
+
+# ==============================================================================
+#   KEYBINDINGS
+# ==============================================================================
+
+# === Multimedia Controls ===
+
+# Volume: 3% per step
+bindsym --locked XF86AudioRaiseVolume exec --no-startup-id $nsc volume-up 3
+bindsym --locked XF86AudioLowerVolume exec --no-startup-id $nsc volume-down 3
+bindsym --locked XF86AudioMute        exec --no-startup-id $nsc volume-mute
+bindsym --locked XF86AudioMicMute     exec --no-startup-id $nsc mic-mute
+
+# Brightness: 3% per step, internal display
+bindsym --locked XF86MonBrightnessUp   exec --no-startup-id $nsc brightness-up 3
+bindsym --locked XF86MonBrightnessDown exec --no-startup-id $nsc brightness-down 3
+
+
+# === Quit ===
+
+# Lock screen + turn off all monitors
+bindsym $mod+Control+q exec --no-startup-id $nsc session lock
+
+# Lock screen + suspend
+bindsym $moS+Control+q exec --no-startup-id $nsc session lock-and-suspend
+
+
+# === Workshop ===
+
+# Toggle Noctalia bar
+bindsym $mod+w exec --no-startup-id $nsc bar-toggle
+
+# Clear active notifications (preserve history)
+bindsym $moS+w exec --no-startup-id $nsc notification-clear-active
+
+
+# === Deeper Focus ===
+
+bindsym $mod+d focus parent
+bindsym $moS+d focus child
+
+
+# === Floating ===
+
+# Toggle focus between tiling/floating
+bindsym $mod+f focus mode_toggle
+
+# Toggle floating state
+bindsym $moS+f floating toggle
+
+
+# === Arrange / Split Layout ===
+
+# Stack / Split
+bindsym $mod+a layout toggle stacking splitv
+bindsym $moS+a layout toggle split
+
+# Predetermine next split direction
+bindsym $mod+s splith
+bindsym $moS+s splitv
+
+
+# === Edit Layout ===
+
+bindsym $mod+e mode "edit_mode"
+bindsym $moS+e move position center
+
+
+# === Tag ===
+
+bindsym $mod+t mark --toggle $tag
+bindsym $moS+t swap container with mark $tag
+
+
+# === Zoom ===
+
+# Stack / Tabbed
+bindsym $mod+z layout toggle stacking tabbed
+
+# Fullscreen
+bindsym $moS+z fullscreen toggle
+
+
+# === Execute ===
+
+# Launcher
+bindsym $mod+x exec --no-startup-id $nsc panel-toggle launcher
+
+# Control Center
+bindsym $moS+x exec --no-startup-id $nsc panel-toggle control-center
+
+
+# === Cmd ===
+
+bindsym $mod+c shortcuts_inhibitor toggle
+bindsym $moS+c kill
+
+
+# === Void ===
+
+bindsym $mod+v scratchpad show
+bindsym $moS+v move scratchpad
+
+
+# === Task Switcher ===
+
+# Hold Super + Tab to browse; release Super to activate
+bindsym $mod+Tab exec --no-startup-id $nsc window-switcher hold
+
+# Reverse // reverse is not needed?
+bindsym $moS+Tab exec --no-startup-id $nsc window-switcher hold
+
+
+# === Application Focus ===
+
+# Focus existing application
+bindsym $mod+space     [app_id=$spacer_focuser] focus
+bindsym $mod+Escape    [app_id=$escaper_focuser] focus
+bindsym $mod+Return    [app_id=$returner_focuser] focus
+bindsym $mod+BackSpace [app_id=$remover_focuser] focus
+
+# Launch application
+bindsym $moS+space     exec --no-startup-id $spacer_launcher
+bindsym $moS+Escape    exec --no-startup-id $escaper_launcher
+bindsym $moS+Return    exec --no-startup-id $returner_launcher
+bindsym $moS+BackSpace exec --no-startup-id $remover_launcher
+
+
+# === Directional Focus / Move ===
+
+bindsym $mod+Left  focus left
+bindsym $mod+Down  focus down
+bindsym $mod+Up    focus up
+bindsym $mod+Right focus right
+
+bindsym $moS+Left  move left
+bindsym $moS+Down  move down
+bindsym $moS+Up    move up
+bindsym $moS+Right move right
+
+
+# === Workspace Management ===
+
+bindsym $mod+1 workspace number 1
+bindsym $mod+2 workspace number 2
+bindsym $mod+3 workspace number 3
+bindsym $mod+4 workspace number 4
+
+bindsym $moS+1 move container to workspace number 1
+bindsym $moS+2 move container to workspace number 2
+bindsym $moS+3 move container to workspace number 3
+bindsym $moS+4 move container to workspace number 4
+
+
+# === Output Focus / Movement ===
+
+# Focus output
+bindsym $mod+Page_Up   focus output up
+bindsym $mod+Page_Down focus output down
+
+# Move workspace between outputs
+bindsym $moS+Page_Up   move workspace to output up
+bindsym $moS+Page_Down move workspace to output down
+
+# Focus left / right output
+bindsym $mod+Home focus output left
+bindsym $mod+End  focus output right
+
+# Move workspace between outputs
+bindsym $moS+Home move workspace to output left
+bindsym $moS+End  move workspace to output right
+
+
+# ==============================================================================
+#   WINDOW RULES
+# ==============================================================================
+
+# Ignore popup windows when focusing
+no_focus [window_role="pop-up"]
+
+# About dialogs
+for_window [window_role="About"] floating enable
+
+
+# ==============================================================================
+#   EDIT MODE
+# ==============================================================================
+
+mode "edit_mode" {
+
+    # Focus
+    bindsym Left  focus left
+    bindsym Down  focus down
+    bindsym Up    focus up
+    bindsym Right focus right
+
+    # Move
+    bindsym $mod+Left  move left  150px
+    bindsym $mod+Down  move down   90px
+    bindsym $mod+Up    move up     90px
+    bindsym $mod+Right move right 150px
+
+    # Resize
+    bindsym $moS+Left  resize shrink width  150px
+    bindsym $moS+Down  resize grow   height  90px
+    bindsym $moS+Up    resize shrink height  90px
+    bindsym $moS+Right resize grow   width  150px
+
+    # Floating
+    bindsym $mod+f focus mode_toggle
+    bindsym $moS+f floating toggle
+
+    # Center
+    bindsym $mod+c floating enable, move position center
+    bindsym $moS+c floating enable, resize set 1000 600, move position center
+
+    # Exit edit_mode
+    bindsym Space     mode "default"
+    bindsym BackSpace mode "default"
+    bindsym Return    mode "default"
+    bindsym Escape    mode "default"
+}
